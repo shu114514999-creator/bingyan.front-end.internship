@@ -1,0 +1,40 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.filter-bar {
+    position: sticky;
+    top: $topbar-height;
+    z-index: $z-filter-bar;
+    display: flex;
+    gap: 8px;
+    padding: 8px 16px;
+    background: $color-bg;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+.filter-chip {
+    @include reset-button;
+    flex: 0 0 auto;
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: $color-bg-subtle;
+    color: $color-text;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background 0.15s;
+
+    &:hover {
+        background: #dcdcdc;
+    }
+
+    &.active {
+        background: $color-text;
+        color: #fff;
+    }
+}

@@ -1,0 +1,27 @@
+@use 'variables' as *;
+
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin reset-button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+@mixin icon-btn($size: 40px) {
+    @include flex-center;
+    @include reset-button;
+    width: $size;
+    height: $size;
+    border-radius: 50%;
+    transition: background 0.15s;
+
+    &:hover {
+        background: $color-bg-hover;
+    }
+}

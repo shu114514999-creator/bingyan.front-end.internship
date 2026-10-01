@@ -1,0 +1,108 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.topbar {
+    position: fixed;
+    top: 0;
+    left: $sidebar-width;
+    right: 0;
+    height: $topbar-height;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 16px;
+    background: $color-bg;
+    z-index: $z-topbar;
+}
+
+.search-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 48px;
+    padding: 0 8px 0 16px;
+    background: $color-bg-subtle;
+    border-radius: $radius-pill;
+    transition: background 0.2s, box-shadow 0.2s;
+
+    &:hover {
+        background: #e2e2e2;
+    }
+
+    &:focus-within {
+        background: $color-bg;
+        box-shadow: 0 0 0 4px $color-focus;
+    }
+
+    input {
+        flex: 1;
+        min-width: 0;
+        height: 100%;
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: 16px;
+        color: $color-text;
+        font-family: inherit;
+
+        &::placeholder {
+            color: #767676;
+        }
+    }
+
+    .search-icon {
+        flex: 0 0 16px;
+        fill: $color-text-secondary;
+    }
+}
+
+.search-inner-btn {
+    @include icon-btn(32px);
+    flex: 0 0 32px;
+
+    svg {
+        fill: $color-text-secondary;
+        width: 24px;
+        height: 24px;
+    }
+}
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 auto;
+}
+
+.avatar-btn {
+    @include reset-button;
+    @include flex-center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.avatar {
+    @include flex-center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #22d3ee);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    user-select: none;
+}
+
+.avatar-btn:hover .avatar {
+    box-shadow: 0 0 0 3px #e0e0e0;
+}
+
+.chevron-btn {
+    @include icon-btn(24px);
+
+    svg {
+        fill: $color-text-secondary;
+    }
+}

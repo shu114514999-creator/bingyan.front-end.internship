@@ -1,0 +1,80 @@
+@use 'variables' as *;
+
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin reset-button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+@mixin icon-btn($size: 40px) {
+    @include flex-center;
+    @include reset-button;
+    width: $size;
+    height: $size;
+    border-radius: 50%;
+    transition: background 0.15s;
+
+    &:hover {
+        background: $color-bg-hover;
+    }
+}
+
+@mixin tooltip($placement: 'right', $align: center) {
+    position: relative;
+
+    &::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        background: #111;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1;
+        padding: 8px 12px;
+        border-radius: 8px;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity .12s ease;
+        z-index: 1000;
+
+        @if $placement =='right' {
+            left: calc(100% + 10px);
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        @else if $placement =='bottom' {
+            top: calc(100% + 10px);
+
+            @if $align =='center' {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            @else if $align =='end' {
+                right: 0;
+                left: auto;
+                transform: none;
+            }
+
+            @else if $align =='start' {
+                left: 0;
+                right: auto;
+                transform: none;
+            }
+        }
+    }
+
+    &:hover::after {
+        opacity: 1;
+        transition-delay: .35s;
+    }
+}

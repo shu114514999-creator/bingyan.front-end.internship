@@ -1,8 +1,12 @@
 import { PinCard } from './PinCard.js';
 
-export function PinGrid({ items, minColumnWidth = 236, gap = 16 }) {
+export function PinGrid({ items, minColumnWidth = 236, gap = 16, onPinOpen } = {}) {
     const root = document.createElement('div');
     root.className = 'pin-grid';
+
+    root.addEventListener('pin:open', (e) => {
+        onPinOpen?.(e.detail.pin);
+    });
 
     const track = document.createElement('div');
     track.className = 'pin-grid__track';
@@ -44,24 +48,37 @@ export function PinGrid({ items, minColumnWidth = 236, gap = 16 }) {
 
     requestAnimationFrame(layout);
 
-    let resizeTimer = null;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(layout, 120);
-    });
+    /* ---- 容器宽度变化就重排（面板推挤 / 窗口缩放都会触发） ---- */
+    let rafId = null;
+    const scheduleLayout = () => {
+        if (rafId != null) return;
+        rafId = requestAnimationFrame(() => {
+            rafId = null;
+            layout();
+        });
+    };
 
-    track.querySelectorAll('img').forEach(img => {
-        if (!img.complete) {
-            img.addEventListener('load', () => requestAnimationFrame(layout), { once: true });
-        }
-    });
+    const ro = new ResizeObserver(scheduleLayout);
+    ro.observe(root);
+
+    /* ---- 图片加载完 → 卡片高度变了，也要重排 ---- */
+    function bindImageLoad(cards) {
+        cards.forEach(card => {
+            card.querySelectorAll('img').forEach(img => {
+                if (img.complete) return;
+                img.addEventListener('load', () => requestAnimationFrame(layout), { once: true });
+            });
+        });
+    }
+    bindImageLoad(cardEls);
 
     root.appendItems = (newItems) => {
-        newItems.forEach(data => {
-            const card = PinCard(data);
+        const newCards = newItems.map(data => PinCard(data));
+        newCards.forEach(card => {
             cardEls.push(card);
             track.appendChild(card);
         });
+        bindImageLoad(newCards);
         layout();
     };
 

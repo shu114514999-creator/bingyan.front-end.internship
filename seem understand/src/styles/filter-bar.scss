@@ -12,8 +12,17 @@
     overflow-x: auto;
     scrollbar-width: none;
 
+    /* ★ 收起/展开动画 */
+    transition: transform .28s cubic-bezier(.4, 0, .2, 1);
+    will-change: transform;
+
     &::-webkit-scrollbar {
         display: none;
+    }
+
+    /* ★ 向下滚动时向上平移自身高度 */
+    &.is-hidden {
+        transform: translateY(calc(-100% - #{$topbar-height}));
     }
 }
 

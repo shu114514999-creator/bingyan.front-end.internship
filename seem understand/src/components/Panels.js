@@ -258,6 +258,7 @@ export function Panels() {
         currentAnchor = anchor;
     }
 
+    // Panels.js
     function close() {
         if (!currentKey) return;
 
@@ -265,10 +266,11 @@ export function Panels() {
         root.classList.remove('is-open');
         document.body.classList.remove('panel-open');
 
-        setActiveNav(getHomeEl());
-
         currentKey = null;
         currentAnchor = null;
+
+        // ★ 不再猜高亮谁，交给外部按路由恢复
+        root.dispatchEvent(new CustomEvent('panel-close', { bubbles: true }));
     }
 
     root.querySelectorAll('.flyout__close').forEach(btn => {

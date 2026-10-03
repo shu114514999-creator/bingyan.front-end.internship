@@ -8,6 +8,7 @@
     transition: padding-left .28s cubic-bezier(.4, 0, .2, 1);
 }
 
+/* ============ 网格容器 ============ */
 .pin-grid {
     position: relative;
     padding: 8px 16px 24px;
@@ -19,6 +20,7 @@
     transition: height 0.25s ease;
 }
 
+/* ============ 卡片 ============ */
 .pin-card {
     position: absolute;
     top: 0;
@@ -27,82 +29,57 @@
     cursor: zoom-in;
 }
 
+/* 图片容器：承载三态背景 + 比例 */
 .pin-card__image {
     position: relative;
     border-radius: $radius-card;
     overflow: hidden;
     background: #efefef;
-
-    img {
-        display: block;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
+    /* loading 灰底 */
+    transition: background .3s ease;
 }
 
+/* 图片本身：默认透明，加载完成后淡入 */
+.pin-card__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity .22s ease;
+}
 
-
-.pin-card:hover .pin-card__overlay {
+/* ★ 三态：loading 默认灰；colored 用内联 background 覆盖；loaded 显示图 */
+.pin-card[data-state='loaded'] .pin-card__img {
     opacity: 1;
 }
 
-.pin-card__save {
-    @include reset-button;
-    align-self: flex-end;
-    padding: 10px 16px;
-    border-radius: $radius-pill;
-    background: $color-brand;
-    color: #fff;
-    font-size: 14px;
-    font-weight: 700;
-
-    &:hover {
-        background: $color-brand-dark;
-    }
-}
-
-
-.pin-card__action {
-    @include icon-btn(32px);
-    background: #fff;
-
-    svg {
-        fill: $color-text;
-    }
-}
-
+/* ============ Hover 遮罩层 ============ */
 .pin-card__overlay {
     position: absolute;
     inset: 0;
     padding: 12px;
-
-    /* 用 flex 纵向 + 两端对齐：保存按钮在顶、底部一行在底 */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: stretch;
-    /* 让子元素横向撑满 */
-
     background: rgba(0, 0, 0, 0.45);
     border-radius: $radius-card;
     opacity: 0;
     transition: opacity 0.18s;
     pointer-events: none;
-    /* 默认不拦截鼠标，避免影响卡片本身 */
+    /* 默认不拦鼠标 */
 }
 
 .pin-card:hover .pin-card__overlay {
     opacity: 1;
     pointer-events: auto;
-    /* 悬停时启用交互 */
 }
 
 /* ---- 右上角：保存按钮 ---- */
 .pin-card__save {
     @include reset-button;
     align-self: flex-end;
-    /* 顶行内靠右 */
     padding: 10px 16px;
     border-radius: $radius-pill;
     background: $color-brand;
@@ -149,9 +126,7 @@
     display: flex;
     gap: 8px;
     flex: 0 0 auto;
-    /* 不收缩 */
     margin-left: auto;
-    /* 如果左侧占位为空，也保证靠右 */
 }
 
 .pin-card__action {
@@ -175,6 +150,7 @@
     text-decoration: none;
 }
 
+/* ============ 面板打开时主内容右移 ============ */
 body.panel-open .main-content {
     padding-left: calc(#{$sidebar-width} + #{$panel-width});
 }

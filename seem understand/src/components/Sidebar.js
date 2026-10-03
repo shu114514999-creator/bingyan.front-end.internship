@@ -47,8 +47,8 @@ export function Sidebar({ onNavigate, onOpenPanel } = {}) {
             : `<a href="${item.href}" aria-label="${item.label}">${renderDualIcon(item.icon)}</a>`;
 
         wrap.addEventListener('click', (e) => {
+            e.preventDefault();               // ★ 统一拦截，交给路由
             if (item.panel) {
-                e.preventDefault();
                 onOpenPanel?.(item.panel, wrap);
                 return;
             }

@@ -1,0 +1,167 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.boards-page {
+    padding-bottom: 60px;
+}
+
+/* ============ 头部 ============ */
+.boards-page__header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 24px 32px 8px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.boards-page__avatar {
+    @include flex-center;
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #22d3ee);
+    color: #fff;
+    font-size: 26px;
+    font-weight: 700;
+    user-select: none;
+}
+
+.boards-page__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.boards-page__name {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: $color-text;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.boards-page__stats {
+    margin: 0;
+    font-size: 14px;
+    color: $color-text-secondary;
+}
+
+/* ============ 标签页 ============ */
+.boards-page__tabs {
+    display: flex;
+    gap: 4px;
+    padding: 16px 32px 0;
+    max-width: 1600px;
+    margin: 0 auto;
+    border-bottom: 1px solid #efefef;
+}
+
+.boards-page__tab {
+    @include reset-button;
+    padding: 10px 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: $color-text-secondary;
+    border-radius: 8px 8px 0 0;
+    position: relative;
+
+    &.is-active {
+        color: $color-text;
+
+        &::after {
+            content: '';
+            position: absolute;
+            left: 12px;
+            right: 12px;
+            bottom: -1px;
+            height: 2px;
+            background: $color-text;
+            border-radius: 2px;
+        }
+    }
+
+    &:hover:not(:disabled):not(.is-active) {
+        background: $color-bg-hover;
+    }
+
+    &:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+    }
+}
+
+/* ============ 网格 ============ */
+.boards-page__grid {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+/* ============ 空状态 ============ */
+.boards-page__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    padding: 60px 32px;
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.boards-page__empty-illus {
+    width: 186px;
+    height: 186px;
+    object-fit: contain;
+    user-select: none;
+    pointer-events: none;
+}
+
+.boards-page__empty-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: $color-text;
+}
+
+.boards-page__empty-desc {
+    margin: 0;
+    max-width: 320px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: $color-text-secondary;
+}
+
+/* ============ 窄屏 ============ */
+@media (max-width: 900px) {
+    .boards-page__header {
+        padding: 16px 16px 8px;
+        gap: 12px;
+    }
+
+    .boards-page__avatar {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+    }
+
+    .boards-page__name {
+        font-size: 22px;
+    }
+
+    .boards-page__tabs {
+        padding: 12px 16px 0;
+    }
+}

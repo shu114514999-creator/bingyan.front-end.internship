@@ -213,6 +213,16 @@
     &:hover {
         background: $color-brand-dark;
     }
+
+    /* ★ 已保存：灰底黑字，像 Pinterest */
+    &.is-saved {
+        background: $color-bg-subtle;
+        color: $color-text;
+
+        &:hover {
+            background: #dcdcdc;
+        }
+    }
 }
 
 /* ============ 中间滚动区 ============ */
@@ -829,5 +839,113 @@
     .media-viewer__zoom-btn {
         width: 40px;
         height: 40px;
+    }
+}
+
+/* ============ 评论：删除按钮 + 空状态 ============ */
+.detail-page__comments-empty {
+    margin: 0;
+    padding: 12px 0;
+    font-size: 14px;
+    color: $color-text-secondary;
+}
+
+
+/* ============ 评论：右上角 ... 按钮 + 弹出菜单 ============ */
+.detail-page__comments-empty {
+    margin: 0;
+    padding: 12px 0;
+    font-size: 14px;
+    color: $color-text-secondary;
+}
+
+/* 评论项需要为菜单提供相对定位的父级 */
+.detail-page__comment {
+    position: relative;
+    padding-right: 28px;
+    /* 给 ... 按钮留位置 */
+}
+
+/* ... 按钮的外层容器 */
+.detail-page__comment-menu-wrap {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 1;
+}
+
+/* ... 按钮本身：默认透明，hover 才可见 */
+.detail-page__comment-more {
+    @include reset-button;
+    @include flex-center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: $color-text-secondary;
+    opacity: 0;
+    transition: background .15s, opacity .15s;
+
+    svg {
+        fill: currentColor;
+    }
+
+    &:hover {
+        background: $color-bg-hover;
+    }
+
+    /* 父级 hover 时显示；菜单打开时也保持显示 */
+    .detail-page__comment:hover &,
+    &[aria-expanded='true'] {
+        opacity: 1;
+    }
+}
+
+/* 弹出菜单 */
+.detail-page__comment-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 140px;
+    padding: 4px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow:
+        0 0 8px rgba(0, 0, 0, .10),
+        0 4px 20px rgba(0, 0, 0, .12);
+    z-index: 2;
+    animation: comment-menu-in .1s ease-out;
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+@keyframes comment-menu-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.detail-page__comment-menu-item {
+    @include reset-button;
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: $color-text;
+    cursor: pointer;
+    transition: background .15s;
+
+    &:hover {
+        background: $color-bg-hover;
     }
 }

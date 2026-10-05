@@ -1,6 +1,8 @@
 const EXT_ICON = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M20 4v14h-2V7.41L5.7 19.71l-1.4-1.42L16.58 6H6V4z"/></svg>`;
 
-export function AccountMenu() {
+import { authApi } from '../api/auth.js';
+
+export function AccountMenu({ onLogout } = {}) {
     const root = document.createElement('div');
     root.className = 'account-menu';
     root.setAttribute('role', 'menu');
@@ -12,12 +14,12 @@ export function AccountMenu() {
             <div class="account-menu__title">Currently in</div>
 
             <a class="account-menu__item account-menu__item--current"
-               href="/shu114514999/" role="menuitem">
-                <span class="account-menu__avatar">S</span>
+               href="#" role="menuitem" data-action="profile">
+                <span class="account-menu__avatar"></span>
                 <span class="account-menu__body">
-                    <span class="account-menu__name">shu</span>
+                    <span class="account-menu__name"></span>
                     <span class="account-menu__sub">Personal</span>
-                    <span class="account-menu__sub account-menu__sub--email">shu114514999@gmail.com</span>
+                    <span class="account-menu__sub account-menu__sub--email"></span>
                 </span>
             </a>
 
@@ -35,27 +37,54 @@ export function AccountMenu() {
                 <span class="account-menu__label">Add Pinterest account</span>
             </a>
 
-            <button class="account-menu__item" type="button" role="menuitem">
+            <button class="account-menu__item" type="button" role="menuitem" data-action="logout">
                 <span class="account-menu__label">Log out</span>
             </button>
         </div>
     `;
 
+    const avatarEl = root.querySelector('.account-menu__avatar');
+    const nameEl = root.querySelector('.account-menu__name');
+    const emailEl = root.querySelector('.account-menu__sub--email');
+    const profileEl = root.querySelector('[data-action="profile"]');
+    const logoutBtn = root.querySelector('[data-action="logout"]');
+
+    /* ★ 更新菜单里的用户信息 */
+    root.updateUser = (user) => {
+        if (user) {
+            avatarEl.textContent = user.username[0].toUpperCase();
+            nameEl.textContent = user.username;
+            emailEl.textContent = user.email;
+            profileEl.href = `/${user.username}/`;
+            logoutBtn.hidden = false;
+        } else {
+            avatarEl.textContent = '?';
+            nameEl.textContent = '未登录';
+            emailEl.textContent = '';
+            profileEl.href = '/login';
+            logoutBtn.hidden = true;
+        }
+    };
+
+    /* ★ 点击 Log out */
+    logoutBtn.addEventListener('click', async () => {
+        try {
+            await authApi.logout();
+        } catch (e) { /* 忽略 */ }
+        close();
+        onLogout?.();
+    });
+
+    /* ---------- 打开 / 关闭 / 定位（保持原样） ---------- */
     let isOpen = false;
     let anchorEl = null;
 
     function position() {
         if (!anchorEl) return;
         const rect = anchorEl.getBoundingClientRect();
-        const MARGIN = 8;
         const GAP = 12;
-
-        // 顶栏底部 + 12px，右边缘与 anchor 对齐
-        const top = rect.bottom + GAP;
-        const right = window.innerWidth - rect.right;
-
-        root.style.top = `${top}px`;
-        root.style.right = `${right}px`;
+        root.style.top = `${rect.bottom + GAP}px`;
+        root.style.right = `${window.innerWidth - rect.right}px`;
     }
 
     function open(anchor) {
@@ -64,14 +93,10 @@ export function AccountMenu() {
             return;
         }
         close();
-
         anchorEl = anchor;
         root.hidden = false;
-        // 先渲染，再定位（要拿到 root 的尺寸）
         position();
-        // 一帧后再校正（等字体/内容撑开）
         requestAnimationFrame(position);
-
         isOpen = true;
         anchor?.classList.add('is-active');
     }
@@ -84,7 +109,6 @@ export function AccountMenu() {
         isOpen = false;
     }
 
-    // 点击外部 / Esc 关闭
     document.addEventListener('mousedown', (e) => {
         if (!isOpen) return;
         if (root.contains(e.target)) return;
@@ -96,12 +120,15 @@ export function AccountMenu() {
         if (e.key === 'Escape') close();
     });
 
-    // 窗口尺寸改变时重新定位
     window.addEventListener('resize', () => {
         if (isOpen) position();
     });
 
     root.open = open;
     root.close = close;
+
+    // 初始：未登录状态
+    root.updateUser(null);
+
     return root;
 }

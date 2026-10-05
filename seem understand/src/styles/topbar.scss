@@ -98,6 +98,11 @@
     user-select: none;
 }
 
+/* ★ 未登录：灰底人形图标 */
+.avatar.avatar--guest {
+    background: #9e9e9e;
+}
+
 .avatar-btn:hover .avatar {
     box-shadow: 0 0 0 3px #e0e0e0;
 }

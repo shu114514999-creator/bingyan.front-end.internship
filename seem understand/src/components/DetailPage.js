@@ -1,4 +1,7 @@
 import { PinGrid } from './PinGrid.js';
+import { commentsApi } from '../api/comments.js';
+import { savesApi } from '../api/saves.js';
+import { getCurrentUser } from '../api/auth.js';
 
 const PANEL_HTML = `
     <div class="detail-page__panel">
@@ -146,7 +149,6 @@ export function DetailPage() {
         return '★★★★★'.slice(0, full) + '☆☆☆☆☆'.slice(0, 5 - full);
     }
 
-    /* ---------- 媒体查看器 ---------- */
     function onMediaViewerKey(e) {
         if (e.key === 'Escape') closeMediaViewer();
     }
@@ -231,7 +233,6 @@ export function DetailPage() {
         setTimeout(() => el.remove(), 220);
     }
 
-    /* ---------- 填充面板 ---------- */
     function populatePanel(panel, pin) {
         const $ = sel => panel.querySelector(sel);
 
@@ -240,6 +241,7 @@ export function DetailPage() {
         const aiLabel = $('.detail-page__ai-label');
         const reactions = $('.detail-page__reactions');
         const reactBtn = $('.detail-page__react');
+        const saveBtn = $('.btn--save');
         const creatorAvatar = $('.detail-page__creator-avatar');
         const creatorName = $('.detail-page__creator-name');
         const shopName = $('.detail-page__shop-name');
@@ -273,7 +275,7 @@ export function DetailPage() {
         imageWrap.style.background = pin.dominantColor ?? '#f1f1f1';
         aiLabel.hidden = !pin.aiModified;
 
-        /* ---------- React 点赞 ---------- */
+        /* ---------- React（点赞）：纯前端计数，不写数据库 ---------- */
         function formatCount(n) {
             if (n >= 1000) {
                 const k = n / 1000;
@@ -290,13 +292,58 @@ export function DetailPage() {
             reactBtn.classList.toggle('is-reacted', reacted);
             reactions.textContent = formatCount(baseReactions + (reacted ? 1 : 0));
         }
+        refreshReact();
 
         reactBtn.addEventListener('click', () => {
             reacted = !reacted;
             refreshReact();
         });
 
-        refreshReact();
+        /* ---------- Save（保存）：写数据库，显示在 /boards ---------- */
+        let saved = false;
+        let saving = false;
+
+        function refreshSave() {
+            saveBtn.textContent = saved ? '已保存' : '保存';
+            saveBtn.classList.toggle('is-saved', saved);
+        }
+        refreshSave();
+
+        async function toggleSave() {
+            if (saving) return;
+            if (!getCurrentUser()) {
+                root.dispatchEvent(new CustomEvent('need-login', { bubbles: true }));
+                return;
+            }
+
+            saving = true;
+            try {
+                if (saved) {
+                    await savesApi.unsave(pin.id);
+                    saved = false;
+                } else {
+                    await savesApi.save(pin.id);
+                    saved = true;
+                }
+                refreshSave();
+            } catch (err) {
+                alert(err.message || '操作失败');
+            } finally {
+                saving = false;
+            }
+        }
+
+        saveBtn.addEventListener('click', toggleSave);
+
+        // 查初始状态
+        if (getCurrentUser()) {
+            savesApi.listMySaves().then(({ pinIds }) => {
+                if (pinIds.includes(pin.id)) {
+                    saved = true;
+                    refreshSave();
+                }
+            }).catch(() => { });
+        }
 
         if (pin.creator) {
             creatorAvatar.textContent = pin.creator[0].toUpperCase();
@@ -343,41 +390,139 @@ export function DetailPage() {
         descMore.hidden = !pin.description;
 
         /* ---------- 评论 ---------- */
-        const comments = Array.isArray(pin.comments) ? [...pin.comments] : [];
-        panel.__comments = comments;
+        let comments = [];
+
+        function closeAllCommentMenus() {
+            panel.querySelectorAll('.detail-page__comment-menu').forEach(m => {
+                m.hidden = true;
+            });
+            panel.querySelectorAll('.detail-page__comment-more').forEach(b => {
+                b.setAttribute('aria-expanded', 'false');
+            });
+        }
 
         function refreshCommentsTitle() {
-            const n = panel.__comments.length;
+            const n = comments.length;
             commentsTitle.textContent =
                 n === 0 ? 'No comments yet'
                     : n === 1 ? '1 Comment'
                         : `${n} Comments`;
         }
 
+        function buildCommentItem(c, { isNew = false } = {}) {
+            const item = document.createElement('div');
+            item.className = 'detail-page__comment' + (isNew ? ' detail-page__comment--new' : '');
+            item.dataset.id = c.id;
+
+            const avatar = document.createElement('span');
+            avatar.className = 'detail-page__comment-avatar';
+            avatar.textContent = (c.author ?? '?')[0].toUpperCase();
+
+            const body = document.createElement('p');
+            body.className = 'detail-page__comment-body';
+
+            const author = document.createElement('span');
+            author.className = 'detail-page__comment-author';
+            author.textContent = c.author ?? '';
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'detail-page__comment-text';
+            textSpan.textContent = c.text ?? '';
+
+            body.appendChild(author);
+            body.appendChild(textSpan);
+
+            item.appendChild(avatar);
+            item.appendChild(body);
+
+            const me = getCurrentUser();
+            if (me && me.id === c.userId) {
+                const wrap = document.createElement('div');
+                wrap.className = 'detail-page__comment-menu-wrap';
+
+                const moreBtn = document.createElement('button');
+                moreBtn.type = 'button';
+                moreBtn.className = 'detail-page__comment-more';
+                moreBtn.setAttribute('aria-label', 'More options');
+                moreBtn.setAttribute('aria-haspopup', 'true');
+                moreBtn.setAttribute('aria-expanded', 'false');
+                moreBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                        <path d="M2.5 9.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5m9.5 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5m9.5 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5"/>
+                    </svg>`;
+
+                const menu = document.createElement('div');
+                menu.className = 'detail-page__comment-menu';
+                menu.setAttribute('role', 'menu');
+                menu.hidden = true;
+
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'detail-page__comment-menu-item';
+                delBtn.setAttribute('role', 'menuitem');
+                delBtn.textContent = 'Delete';
+                delBtn.addEventListener('click', async () => {
+                    menu.hidden = true;
+                    moreBtn.setAttribute('aria-expanded', 'false');
+                    try {
+                        await commentsApi.remove(c.id);
+                        comments = comments.filter(x => x.id !== c.id);
+                        item.remove();
+                        refreshCommentsTitle();
+                    } catch (err) {
+                        alert(err.message || '删除失败');
+                    }
+                });
+
+                menu.appendChild(delBtn);
+
+                moreBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = !menu.hidden;
+                    closeAllCommentMenus();
+                    if (!isOpen) {
+                        menu.hidden = false;
+                        moreBtn.setAttribute('aria-expanded', 'true');
+                    }
+                });
+
+                wrap.appendChild(moreBtn);
+                wrap.appendChild(menu);
+                item.appendChild(wrap);
+            }
+
+            return item;
+        }
+
         function renderComments() {
             commentsList.innerHTML = '';
             const expanded = commentsToggle.getAttribute('aria-expanded') === 'true';
             commentsList.hidden = !expanded;
-
-            panel.__comments.forEach(c => {
-                const item = document.createElement('div');
-                item.className = 'detail-page__comment';
-                item.innerHTML = `
-                    <span class="detail-page__comment-avatar">${(c.author ?? '?')[0].toUpperCase()}</span>
-                    <p class="detail-page__comment-body">
-                        <span class="detail-page__comment-author">${c.author ?? ''}</span>
-                        <span class="detail-page__comment-text"></span>
-                    </p>
-                `;
-                item.querySelector('.detail-page__comment-text').textContent = c.text ?? '';
-                commentsList.appendChild(item);
-            });
+            comments.forEach(c => commentsList.appendChild(buildCommentItem(c)));
             refreshCommentsTitle();
         }
 
         commentsToggle.setAttribute('aria-expanded', 'true');
         commentsToggle.classList.remove('is-collapsed');
-        renderComments();
+        commentsList.innerHTML = '<p class="detail-page__comments-empty">加载中…</p>';
+
+        commentsApi.list(pin.id)
+            .then(({ comments: list }) => {
+                comments = list || [];
+                renderComments();
+            })
+            .catch(err => {
+                console.error('加载评论失败:', err);
+                comments = [];
+                commentsList.innerHTML = '<p class="detail-page__comments-empty">评论加载失败</p>';
+                refreshCommentsTitle();
+            });
+
+        // 点击面板空白区域关闭评论菜单
+        panel.addEventListener('click', (e) => {
+            if (e.target.closest('.detail-page__comment-menu-wrap')) return;
+            closeAllCommentMenus();
+        });
 
         if (viewLargerBtn) {
             viewLargerBtn.addEventListener('click', () => {
@@ -404,33 +549,41 @@ export function DetailPage() {
             composerSubmit.hidden = text.length === 0;
         }
 
-        function submitComment() {
+        async function submitComment() {
             const text = (composerInput.textContent ?? '').replace(/\u00a0/g, ' ').trim();
             if (!text) return;
 
-            panel.__comments.push({ author: 'shu', text });
+            const me = getCurrentUser();
+            if (!me) {
+                root.dispatchEvent(new CustomEvent('need-login', { bubbles: true }));
+                return;
+            }
 
-            commentsToggle.setAttribute('aria-expanded', 'true');
-            commentsToggle.classList.remove('is-collapsed');
-            commentsList.hidden = false;
+            composerSubmit.disabled = true;
+            try {
+                const { comment } = await commentsApi.create(pin.id, text);
+                comments.push(comment);
 
-            const item = document.createElement('div');
-            item.className = 'detail-page__comment detail-page__comment--new';
-            item.innerHTML = `
-                <span class="detail-page__comment-avatar">S</span>
-                <p class="detail-page__comment-body">
-                    <span class="detail-page__comment-author">shu</span>
-                    <span class="detail-page__comment-text"></span>
-                </p>
-            `;
-            item.querySelector('.detail-page__comment-text').textContent = text;
-            commentsList.appendChild(item);
-            refreshCommentsTitle();
-            item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                commentsToggle.setAttribute('aria-expanded', 'true');
+                commentsToggle.classList.remove('is-collapsed');
+                commentsList.hidden = false;
 
-            composerInput.textContent = '';
-            refreshSubmit();
-            composerInput.focus();
+                const emptyHint = commentsList.querySelector('.detail-page__comments-empty');
+                if (emptyHint) emptyHint.remove();
+
+                const item = buildCommentItem(comment, { isNew: true });
+                commentsList.appendChild(item);
+                refreshCommentsTitle();
+                item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+                composerInput.textContent = '';
+                refreshSubmit();
+            } catch (err) {
+                alert(err.message || '发送失败');
+            } finally {
+                composerSubmit.disabled = false;
+                composerInput.focus();
+            }
         }
 
         composerInput.addEventListener('input', refreshSubmit);
@@ -446,7 +599,6 @@ export function DetailPage() {
         refreshSubmit();
     }
 
-    /* ---------- 无限滚动 ---------- */
     function cleanupInfiniteScroll() {
         if (scrollHandler) {
             window.removeEventListener('scroll', scrollHandler);
@@ -488,7 +640,6 @@ export function DetailPage() {
         });
     }
 
-    /* ---------- 挂载 / 销毁 ---------- */
     function mountGrid(pin, relatedItems, loadMore) {
         cleanupInfiniteScroll();
 

@@ -1,0 +1,114 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.auth-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+
+    /* ★ 关键：hidden 时必须隐藏，覆盖上面的 display: flex */
+    &[hidden] {
+        display: none;
+    }
+}
+
+.auth-page__card {
+    width: 400px;
+    max-width: calc(100vw - 32px);
+    padding: 40px 32px;
+    background: #fff;
+    border: 1px solid #e9e9e9;
+    border-radius: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, .06);
+}
+
+.auth-page__title {
+    margin: 0 0 24px;
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.auth-page__form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.auth-page__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.auth-page__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: $color-text-secondary;
+}
+
+.auth-page__input {
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+
+    &:focus {
+        border-color: $color-brand;
+        box-shadow: 0 0 0 3px rgba(230, 0, 35, .12);
+    }
+}
+
+.auth-page__error {
+    margin: 0;
+    font-size: 13px;
+    color: $color-brand;
+}
+
+.auth-page__submit {
+    @include reset-button;
+    height: 44px;
+    border-radius: 12px;
+    background: $color-brand;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover {
+        background: $color-brand-dark;
+    }
+
+    &:disabled {
+        opacity: .6;
+        cursor: not-allowed;
+    }
+}
+
+.auth-page__switch {
+    margin: 20px 0 0;
+    text-align: center;
+    font-size: 14px;
+    color: $color-text-secondary;
+}
+
+.auth-page__switch-btn {
+    @include reset-button;
+    font-size: 14px;
+    font-weight: 700;
+    color: $color-brand;
+    cursor: pointer;
+    margin-left: 4px;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}

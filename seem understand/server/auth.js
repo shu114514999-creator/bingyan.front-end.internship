@@ -86,6 +86,39 @@ authRouter.get('/me', (req, res) => {
     res.json({ user: pickUser(row) });
 });
 
+/* ★ ---------- 修改密码 ---------- */
+authRouter.post('/change-password', requireAuth, async (req, res) => {
+    const { oldPassword, newPassword } = req.body ?? {};
+
+    if (typeof oldPassword !== 'string' || oldPassword.length === 0) {
+        return res.status(400).json({ error: '请输入当前密码' });
+    }
+    if (typeof newPassword !== 'string' || newPassword.length < 6) {
+        return res.status(400).json({ error: '新密码至少 6 位' });
+    }
+    if (newPassword.length > 100) {
+        return res.status(400).json({ error: '新密码过长' });
+    }
+    if (oldPassword === newPassword) {
+        return res.status(400).json({ error: '新密码不能与当前密码相同' });
+    }
+
+    const row = db.prepare(
+        'SELECT password_hash FROM users WHERE id = ?'
+    ).get(req.session.userId);
+    if (!row) return res.status(401).json({ error: '未登录' });
+
+    const ok = await bcrypt.compare(oldPassword, row.password_hash);
+    if (!ok) return res.status(401).json({ error: '当前密码不正确' });
+
+    const newHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    db.prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+        .run(newHash, req.session.userId);
+
+    res.json({ ok: true });
+});
+
+/* ---------- 中间件：需要登录 ---------- */
 export function requireAuth(req, res, next) {
     if (!req.session.userId) {
         return res.status(401).json({ error: '未登录' });

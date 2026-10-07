@@ -2,7 +2,7 @@ const EXT_ICON = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="t
 
 import { authApi } from '../api/auth.js';
 
-export function AccountMenu({ onLogout } = {}) {
+export function AccountMenu({ onLogout, onChangePassword } = {}) {
     const root = document.createElement('div');
     root.className = 'account-menu';
     root.setAttribute('role', 'menu');
@@ -37,6 +37,10 @@ export function AccountMenu({ onLogout } = {}) {
                 <span class="account-menu__label">Add Pinterest account</span>
             </a>
 
+            <button class="account-menu__item" type="button" role="menuitem" data-action="change-password" hidden>
+                <span class="account-menu__label">修改密码</span>
+            </button>
+
             <button class="account-menu__item" type="button" role="menuitem" data-action="logout">
                 <span class="account-menu__label">Log out</span>
             </button>
@@ -48,8 +52,9 @@ export function AccountMenu({ onLogout } = {}) {
     const emailEl = root.querySelector('.account-menu__sub--email');
     const profileEl = root.querySelector('[data-action="profile"]');
     const logoutBtn = root.querySelector('[data-action="logout"]');
+    const changePwdBtn = root.querySelector('[data-action="change-password"]');
 
-    /* ★ 更新菜单里的用户信息 */
+    /* 更新菜单里的用户信息 */
     root.updateUser = (user) => {
         if (user) {
             avatarEl.textContent = user.username[0].toUpperCase();
@@ -57,22 +62,30 @@ export function AccountMenu({ onLogout } = {}) {
             emailEl.textContent = user.email;
             profileEl.href = `/${user.username}/`;
             logoutBtn.hidden = false;
+            changePwdBtn.hidden = false;
         } else {
             avatarEl.textContent = '?';
             nameEl.textContent = '未登录';
             emailEl.textContent = '';
             profileEl.href = '/login';
             logoutBtn.hidden = true;
+            changePwdBtn.hidden = true;
         }
     };
 
-    /* ★ 点击 Log out */
+    /* 登出 */
     logoutBtn.addEventListener('click', async () => {
         try {
             await authApi.logout();
         } catch (e) { /* 忽略 */ }
         close();
         onLogout?.();
+    });
+
+    /* ★ 修改密码 */
+    changePwdBtn.addEventListener('click', () => {
+        close();
+        onChangePassword?.();
     });
 
     /* ---------- 打开 / 关闭 / 定位（保持原样） ---------- */

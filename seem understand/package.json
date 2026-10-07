@@ -19,6 +19,7 @@
     "connect-sqlite3": "^0.9.18",
     "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
-    "express-session": "^1.19.0"
+    "express-session": "^1.19.0",
+    "multer": "^2.4.0"
   }
 }

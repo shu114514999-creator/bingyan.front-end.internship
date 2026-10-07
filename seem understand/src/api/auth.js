@@ -13,7 +13,7 @@ async function request(path, options = {}) {
     return data;
 }
 
-/* ★ 全局缓存当前登录用户 */
+/* 全局缓存当前登录用户 */
 let currentUser = null;
 export function setCurrentUser(u) { currentUser = u; }
 export function getCurrentUser() { return currentUser; }
@@ -52,5 +52,12 @@ export const authApi = {
             setCurrentUser(null);
             throw e;
         }
-    }
+    },
+
+    /* ★ 修改密码 */
+    changePassword: (oldPassword, newPassword) =>
+        request('/api/auth/change-password', {
+            method: 'POST',
+            body: JSON.stringify({ oldPassword, newPassword })
+        })
 };

@@ -158,3 +158,36 @@ body.panel-open .main-content {
 body.panel-open .detail-page__back {
     left: calc(#{$sidebar-width} + #{$panel-width} + 12px);
 }
+
+/* ============ 首页空状态 ============ */
+.home-view__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    padding: 60px 32px;
+
+    &[hidden] {
+        display: none;
+    }
+
+    img {
+        user-select: none;
+        pointer-events: none;
+    }
+
+    h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: $color-text;
+    }
+
+    p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.5;
+        color: $color-text-secondary;
+    }
+}

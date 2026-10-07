@@ -7,11 +7,11 @@ export function PinCard(data) {
     const card = document.createElement('article');
     card.className = 'pin-card';
     card.dataset.id = data.id;
-    card.dataset.state = 'loading';   // loading | colored | loaded
+    card.dataset.state = 'loading';
 
     card.innerHTML = `
         <a class="pin-card__link" href="/pin/${data.id}" aria-label="${data.title ?? ''}">
-            <div class="pin-card__image" style="aspect-ratio: ${PLACEHOLDER_RATIO};">
+            <div class="pin-card__image" style="aspect-ratio: 1 / ${1 / PLACEHOLDER_RATIO};">
                 <img class="pin-card__img" alt="" decoding="async">
             </div>
         </a>
@@ -32,6 +32,7 @@ export function PinCard(data) {
     const imageEl = card.querySelector('.pin-card__image');
     const imgEl = card.querySelector('.pin-card__img');
     const linkEl = card.querySelector('.pin-card__link');
+    const saveBtn = card.querySelector('.pin-card__save');
 
     card.hydrate = (full) => {
         if (full.width && full.height) {
@@ -47,18 +48,22 @@ export function PinCard(data) {
         linkEl.href = `/pin/${full.id}`;
         card.dataset.id = full.id;
 
+        /* ★ 根据全局已保存集合，同步按钮初始状态 */
+        const id = Number(full.id);
+        const isSaved = window.__mySavedPinIds?.has(id) ?? false;
+        saveBtn.textContent = isSaved ? '已保存' : '保存';
+        saveBtn.classList.toggle('is-saved', isSaved);
+
         if (full.image) {
             if (loadedImages.has(full.image)) {
-                // ★ 命中缓存：直接 loaded，没有动画
                 imgEl.onload = null;
                 imgEl.onerror = null;
                 imgEl.src = full.image;
                 card.dataset.state = 'loaded';
             } else {
-                // 首次加载：走完整三态
                 imgEl.onload = () => {
                     card.dataset.state = 'loaded';
-                    loadedImages.add(full.image);      // ★ 记入缓存
+                    loadedImages.add(full.image);
                 };
                 imgEl.onerror = () => { card.dataset.state = 'colored'; };
                 imgEl.src = full.image;
@@ -69,7 +74,6 @@ export function PinCard(data) {
         }
     };
 
-    // 元素回收时重置状态
     card.reset = () => {
         card.dataset.state = 'loading';
         imgEl.onload = null;
@@ -77,6 +81,8 @@ export function PinCard(data) {
         imgEl.removeAttribute('src');
         imageEl.style.aspectRatio = `${PLACEHOLDER_RATIO}`;
         imageEl.style.background = '';
+        saveBtn.textContent = '保存';
+        saveBtn.classList.remove('is-saved');
     };
 
     return card;

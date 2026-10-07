@@ -5,7 +5,6 @@
     padding-bottom: 60px;
 }
 
-/* ============ 头部 ============ */
 .boards-page__header {
     display: flex;
     align-items: center;
@@ -52,7 +51,6 @@
     color: $color-text-secondary;
 }
 
-/* ============ 标签页 ============ */
 .boards-page__tabs {
     display: flex;
     gap: 4px;
@@ -86,17 +84,11 @@
         }
     }
 
-    &:hover:not(:disabled):not(.is-active) {
+    &:hover:not(.is-active) {
         background: $color-bg-hover;
-    }
-
-    &:disabled {
-        opacity: .5;
-        cursor: not-allowed;
     }
 }
 
-/* ============ 网格 ============ */
 .boards-page__grid {
     width: 100%;
     max-width: 1600px;
@@ -107,7 +99,21 @@
     }
 }
 
-/* ============ 空状态 ============ */
+.boards-page__loading {
+    margin: 40px 32px;
+    font-size: 14px;
+    color: $color-text-secondary;
+}
+
+/* ★ Boards 页里不显示"保存"按钮 */
+.boards-page .pin-card__save {
+    display: none;
+}
+
+.boards-page .pin-card__overlay {
+    justify-content: flex-end;
+}
+
 .boards-page__empty {
     display: flex;
     flex-direction: column;
@@ -144,7 +150,6 @@
     color: $color-text-secondary;
 }
 
-/* ============ 窄屏 ============ */
 @media (max-width: 900px) {
     .boards-page__header {
         padding: 16px 16px 8px;

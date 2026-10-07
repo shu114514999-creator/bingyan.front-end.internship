@@ -1,6 +1,7 @@
 import { PinGrid } from './PinGrid.js';
 import { commentsApi } from '../api/comments.js';
 import { savesApi } from '../api/saves.js';
+import { reactionsApi } from '../api/reactions.js';
 import { getCurrentUser } from '../api/auth.js';
 
 const PANEL_HTML = `
@@ -275,7 +276,7 @@ export function DetailPage() {
         imageWrap.style.background = pin.dominantColor ?? '#f1f1f1';
         aiLabel.hidden = !pin.aiModified;
 
-        /* ---------- React（点赞）：纯前端计数，不写数据库 ---------- */
+        /* ---------- React（点赞）：走后端 ---------- */
         function formatCount(n) {
             if (n >= 1000) {
                 const k = n / 1000;
@@ -284,23 +285,52 @@ export function DetailPage() {
             return String(n);
         }
 
-        const baseReactions = Number(pin.reactions ?? 0);
         let reacted = false;
+        let reactionCount = 0;
+        let reacting = false;
 
         function refreshReact() {
             reactBtn.setAttribute('aria-pressed', String(reacted));
             reactBtn.classList.toggle('is-reacted', reacted);
-            reactions.textContent = formatCount(baseReactions + (reacted ? 1 : 0));
+            reactions.textContent = formatCount(reactionCount);
         }
-        refreshReact();
 
-        reactBtn.addEventListener('click', () => {
-            reacted = !reacted;
-            refreshReact();
+        // 初始：拉后端
+        reactionsApi.get(pin.id)
+            .then(({ count, reacted: r }) => {
+                reactionCount = count;
+                reacted = r;
+                refreshReact();
+            })
+            .catch(err => {
+                console.warn('拉取点赞状态失败:', err);
+                refreshReact();
+            });
+
+        reactBtn.addEventListener('click', async () => {
+            if (reacting) return;
+            if (!getCurrentUser()) {
+                root.dispatchEvent(new CustomEvent('need-login', { bubbles: true }));
+                return;
+            }
+
+            reacting = true;
+            try {
+                const res = reacted
+                    ? await reactionsApi.unreact(pin.id)
+                    : await reactionsApi.react(pin.id);
+                reacted = res.reacted;
+                reactionCount = res.count;
+                refreshReact();
+            } catch (err) {
+                alert(err.message || '操作失败');
+            } finally {
+                reacting = false;
+            }
         });
 
         /* ---------- Save（保存）：写数据库，显示在 /boards ---------- */
-        let saved = false;
+        let saved = window.__mySavedPinIds?.has(Number(pin.id)) ?? false;
         let saving = false;
 
         function refreshSave() {
@@ -321,9 +351,11 @@ export function DetailPage() {
                 if (saved) {
                     await savesApi.unsave(pin.id);
                     saved = false;
+                    window.__mySavedPinIds?.delete(Number(pin.id));
                 } else {
                     await savesApi.save(pin.id);
                     saved = true;
+                    window.__mySavedPinIds?.add(Number(pin.id));
                 }
                 refreshSave();
             } catch (err) {
@@ -335,21 +367,23 @@ export function DetailPage() {
 
         saveBtn.addEventListener('click', toggleSave);
 
-        // 查初始状态
-        if (getCurrentUser()) {
-            savesApi.listMySaves().then(({ pinIds }) => {
-                if (pinIds.includes(pin.id)) {
-                    saved = true;
-                    refreshSave();
-                }
-            }).catch(() => { });
-        }
+        /* ★ 兼容两种数据源：
+   - mockPins: pin.creator / pin.creatorUrl
+   - 上传的 pin: pin.username / 用 /${username}/ 作为链接
+*/
+        const creatorName_ = pin.creator ?? pin.username;
+        const creatorUrl_ = pin.creatorUrl ?? (pin.username ? `/${pin.username}/` : null);
 
-        if (pin.creator) {
-            creatorAvatar.textContent = pin.creator[0].toUpperCase();
-            creatorName.textContent = pin.creator;
-            creatorName.href = pin.creatorUrl ?? '#';
-            creatorAvatar.href = pin.creatorUrl ?? '#';
+        if (creatorName_) {
+            creatorAvatar.textContent = creatorName_[0].toUpperCase();
+            creatorName.textContent = creatorName_;
+            if (creatorUrl_) {
+                creatorName.href = creatorUrl_;
+                creatorAvatar.href = creatorUrl_;
+            } else {
+                creatorName.removeAttribute('href');
+                creatorAvatar.removeAttribute('href');
+            }
         }
 
         if (pin.shop) {

@@ -1,0 +1,158 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.change-pwd {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity .2s ease;
+
+    &[hidden] {
+        display: none;
+    }
+
+    &.is-open {
+        opacity: 1;
+    }
+}
+
+.change-pwd__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, .5);
+}
+
+.change-pwd__dialog {
+    position: relative;
+    z-index: 1;
+    width: 400px;
+    max-width: calc(100vw - 32px);
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+    transform: scale(.95);
+    transition: transform .2s ease;
+
+    .change-pwd.is-open & {
+        transform: scale(1);
+    }
+}
+
+.change-pwd__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 20px 0 24px;
+}
+
+.change-pwd__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: $color-text;
+}
+
+.change-pwd__close {
+    @include reset-button;
+    @include flex-center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    transition: background .15s;
+
+    &:hover {
+        background: $color-bg-hover;
+    }
+
+    svg {
+        fill: $color-text;
+    }
+}
+
+.change-pwd__form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 24px 24px;
+}
+
+.change-pwd__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.change-pwd__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: $color-text-secondary;
+}
+
+.change-pwd__input {
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+
+    &:focus {
+        border-color: $color-brand;
+        box-shadow: 0 0 0 3px rgba(230, 0, 35, .12);
+    }
+}
+
+.change-pwd__error {
+    margin: -4px 0 0;
+    font-size: 13px;
+    color: $color-brand;
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.change-pwd__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.change-pwd__btn {
+    @include reset-button;
+    padding: 10px 20px;
+    border-radius: $radius-pill;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s;
+
+    &--ghost {
+        background: transparent;
+        color: $color-text;
+
+        &:hover {
+            background: $color-bg-hover;
+        }
+    }
+
+    &--primary {
+        background: $color-brand;
+        color: #fff;
+
+        &:hover:not(:disabled) {
+            background: $color-brand-dark;
+        }
+
+        &:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+    }
+}
